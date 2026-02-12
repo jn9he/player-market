@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Soccer Market Evaluation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; }
+    header { margin-bottom: 2rem; }
+    .section { margin-bottom: 2rem; }
+    label { display: block; margin-top: 1rem; }
+    input, button { padding: 0.4rem; margin-top: 0.3rem; }
+    button { cursor: pointer; }
+    .log { white-space: pre-wrap; background: #f5f5f5; padding: 1rem; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Soccer Market Evaluation</h1>
+    <p>
+      Experimental project to analyze player market value using data from SoFIFA.
+      Data collection and processing run on a backend service; this page is just the front-end controller.
+    </p>
+
+    <!-- Adjust this section to match SoFIFA’s branding requirement -->
+    <p>
+      Data source: <a href="https://sofifa.com" target="_blank" rel="noopener">
+        SoFIFA.com
+      </a>
+    </p>
+  </header>
+
+  <section class="section">
+    <h2>Extract latest SoFIFA data</h2>
+    <p>
+      Enter a roster/version key (for example, <code>250003</code>) and click “Start extraction”.
+      The backend will run the scraper and return a downloadable CSV link when finished.
+    </p>
+
+    <label>
+      Roster ID:
+      <input id="roster-input" type="text" value="250003" />
+    </label>
+
+    <button id="start-btn">Start extraction</button>
+
+    <div id="status" class="log" style="margin-top: 1rem;"></div>
+  </section>
+
+  <section class="section">
+    <h2>Download latest dataset</h2>
+    <p>Once an extraction is completed, the latest CSV will be available here.</p>
+    <p id="download-link">No dataset available yet.</p>
+  </section>
+
+  <script>
+    const startBtn = document.getElementById('start-btn');
+    const rosterInput = document.getElementById('roster-input');
+    const statusDiv = document.getElementById('status');
+    const downloadDiv = document.getElementById('download-link');
+
+    // TODO: change this to your actual backend URL
+    const API_BASE = 'https://your-backend-host.example/api';
+
+    function log(msg) {
+      statusDiv.textContent += msg + '\\n';
+    }
+
+    startBtn.addEventListener('click', async () => {
+      statusDiv.textContent = '';
+      const roster = rosterInput.value.trim();
+      if (!roster) {
+        log('Please enter a roster ID.');
+        return;
+      }
+
+      log('Starting extraction for roster ' + roster + '...');
+
+      try {
+        const resp = await fetch(API_BASE + '/extract?roster=' + encodeURIComponent(roster), {
+          method: 'POST',
+        });
+        if (!resp.ok) {
+          log('Backend error: ' + resp.status + ' ' + resp.statusText);
+          return;
+        }
+        const data = await resp.json();
+        log(data.message || 'Extraction job started.');
+
+        if (data.download_url) {
+          downloadDiv.innerHTML =
+            '<a href="' + data.download_url + '" target="_blank" rel="noopener">Download latest dataset (CSV)</a>';
+        }
+      } catch (err) {
+        log('Request failed: ' + err);
+      }
+    });
+  </script>
+</body>
+</html>
