@@ -7,22 +7,33 @@ def clean_dataframe(df):
     Cleans the FIFA dataset by removing goalkeepers, dropping unnecessary columns,
     and converting attribute columns to numeric types.
     """
-    # Drop goalkeepers if 'player_positions' column exists
+    # Clean and one-hot encode player_positions
     if 'player_positions' in df.columns:
+        # Remove goalkeepers
         df = df[df['player_positions'] != 'GK'].copy()
+        
+        # Get one-hot encoding of player positions
+        positions_dummies = df['player_positions'].str.get_dummies(sep=', ')
+        
+        # Concatenate the new columns to the original dataframe
+        df = pd.concat([df, positions_dummies], axis=1)
+        
+        # Drop the original player_positions column because it is now encoded
+        df = df.drop('player_positions', axis=1)
 
     # Define columns to drop
     columns_to_drop = [
         'club_loaned_from', 'nation_team_id', 'nation_position',
         'nation_jersey_number', 'release_clause_eur', 'player_tags', 'player_traits',
         'mentality_composure', 'goalkeeping_speed',
-        'nation_logo_url', 'club_logo_url', 'club_flag_url',
-        'value_eur', 'wage_eur', 'club_team_id', 'club_name', 'league_name', 'league_level',
+        'nation_logo_url', 'club_logo_url', 'club_flag_url', 'club_team_id', 'club_name', 'league_name', 'league_level',
         'club_position', 'club_jersey_number', 'club_joined', 'club_contract_valid_until',
         'goalkeeping_diving', 'goalkeeping_handling', 'goalkeeping_kicking',
         'goalkeeping_positioning', 'goalkeeping_reflexes', 'player_face_url', 'nation_flag_url',
-        'gk'  # This was a separate step in the notebook
+        'gk' 
     ]
+
+    # Consider additional columns to drop like preferred_foot, work_rate, real_face,
     
     # Drop columns that exist in the dataframe
     existing_columns_to_drop = [col for col in columns_to_drop if col in df.columns]
